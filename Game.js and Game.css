@@ -1,0 +1,132 @@
+// src/Game.js
+import React, { useState, useEffect } from 'react';
+import './Chat.css';
+
+const WINNING_COMBINATIONS = [
+  [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+  [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+  [0, 4, 8], [2, 4, 6] // Diagonals
+];
+
+const Game = () => {
+  const [board, setBoard] = useState(Array(9).fill(null));
+  const [isXNext, setIsXNext] = useState(true);
+  const [winner, setWinner] = useState(null);
+
+  const calculateWinner = (squares) => {
+    for (let i = 0; i < WINNING_COMBINATIONS.length; i++) {
+      const [a, b, c] = WINNING_COMBINATIONS[i];
+      if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+        return squares[a];
+      }
+    }
+    return null;
+  };
+
+  const handleClick = (index) => {
+    if (board[index] || winner) return;
+
+    const newBoard = board.slice();
+    newBoard[index] = isXNext ? 'X' : 'O';
+    setBoard(newBoard);
+    setIsXNext(!isXNext);
+  };
+
+  const getEmptySquares = (squares) => {
+    return squares.reduce((emptySquares, value, index) => {
+      if (!value) emptySquares.push(index);
+      return emptySquares;
+    }, []);
+  };
+
+  useEffect(() => {
+    const emptySquares = getEmptySquares(board);
+    const winner = calculateWinner(board);
+    if (!winner && emptySquares.length === 0) {
+      setWinner('Draw');
+    } else if (!winner && !isXNext) {
+      // AI's turn
+      const randomIndex = Math.floor(Math.random() * emptySquares.length);
+      const aiMove = emptySquares[randomIndex];
+      const newBoard = board.slice();
+      newBoard[aiMove] = 'O';
+      setBoard(newBoard);
+      setIsXNext(true);
+    } else {
+      setWinner(winner);
+    }
+  }, [board, isXNext]);
+
+  const renderSquare = (index) => (
+    <button className="square" onClick={() => handleClick(index)}>
+      {board[index]}
+    </button>
+  );
+
+  const status = winner ? `Winner: ${winner}` : `Next player: ${isXNext ? 'X' : 'O'}`;
+
+  return (
+    <div className="game">
+      <div className="game-board">
+        <div className="status">{status}</div>
+        <div className="board-row">
+          {renderSquare(0)}
+          {renderSquare(1)}
+          {renderSquare(2)}
+        </div>
+        <div className="board-row">
+          {renderSquare(3)}
+          {renderSquare(4)}
+          {renderSquare(5)}
+        </div>
+        <div className="board-row">
+          {renderSquare(6)}
+          {renderSquare(7)}
+          {renderSquare(8)}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Game;
+
+
+
+
+/* src/Game.css */
+.game {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.game-board {
+  border: 1px solid #aaa;
+  width: 300px;
+}
+
+.status {
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.board-row {
+  display: flex;
+}
+
+.square {
+  width: 100px;
+  height: 100px;
+  font-size: 24px;
+  text-align: center;
+  line-height: 100px;
+  border: 1px solid #aaa;
+}
+
+.square:hover {
+  background-color: #f8f8f8;
+  cursor: pointer;
+}
